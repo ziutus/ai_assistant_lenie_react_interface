@@ -47,6 +47,11 @@ function App() {
     const [searchSimilar, setSearchSimilar] = useState('');
     const [searchSimilarResult, setSearchSimilarResult] = useState([]);
 
+    const lenie_version = "0.2.3"
+    const llm_simple_jobs_model_name = "gpt-4o-2024-05-13"
+
+    const ai_correct_query = "Dla treści poniżej popraw błędy interpunkcyjne. Zwróć tylko poprawioną treść.   ---Treść--- {text}"
+
     React.useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const apikeyParam = params.get('apikey');
@@ -109,7 +114,7 @@ function App() {
         }
 
         try {
-            const response = await axios.post(`${apiUrl}/save_website`, {
+            const response = await axios.post(`${apiUrl}/website_save`, {
                 id: website.id,
                 url: website.url   ,
                 tags: website.tags,
@@ -155,7 +160,7 @@ function App() {
         let next_id = website.next_id
 
         try {
-            const response= await axios.post(`${apiUrl}/save_website`, {
+            const response= await axios.post(`${apiUrl}/website_save`, {
                 id: website.id,
                 url: website.url   ,
                 tags: website.tags,
@@ -231,8 +236,10 @@ function App() {
 
     const handleCorrectUsingAI = async () => {
         try {
-            const response = await axios.post(`${apiUrl}/website_correct_using_ai`, {
+            const response = await axios.post(`${apiUrl}/ai_ask`, {
                 text: website.text,
+                query: ai_correct_query,
+                model: llm_simple_jobs_model_name
             }, {
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -546,7 +553,7 @@ function App() {
                 <a href="#" onClick={() => handleShowElements('list')}>Lista</a> |
                 <a href="#" onClick={() => handleShowElements('search')}>Szukaj</a>
             </div>
-            <h1>Lenie v0.2.2</h1>
+            <h1>Lenie v{lenie_version}</h1>
 
             <div>
                 <label>
