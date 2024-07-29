@@ -1,7 +1,7 @@
 import logo from './logo.svg';
 import './App.css';
 import axios from 'axios';
-import React, { useState } from 'react';
+import React, { useState,useRef } from 'react';
 
 import ListItemSearchSimilar from './utils';
 
@@ -34,8 +34,11 @@ let showElements = {
 
 function App() {
 
-    const [apiUrl, setApiUrl] = useState("http://localhost:5000/");
+    // const [apiUrl, setApiUrl] = useState("http://localhost:5000/");
+    const [apiUrl, setApiUrl] = useState("https://y448yz22yk.execute-api.us-east-1.amazonaws.com/v1");
+    const [apiInfraUrl, setApiInfraUrl] = useState("https://y448yz22yk.execute-api.us-east-1.amazonaws.com/v1");
     const [apiKey, setApiKey] = useState('');
+    const [apiStatusKey, setApiStatusKey] = useState('');
     const [linkId, setLinkId] = useState('');
     const [dbStatus, setDbStatus] = useState('unknown');
 
@@ -55,12 +58,16 @@ function App() {
     React.useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const apikeyParam = params.get('apikey');
+        const apiStatusKeyParam = params.get('apiStatusKey');
 
         if (apikeyParam) {
             setApiKey(apikeyParam);
         }
+        if (apiStatusKeyParam) {
+            setApiKey(apiStatusKeyParam);
+            handleDBStatusGet();
+        }
 
-        handleGetDBStatus();
     }, []);
 
     const handleShowElements = (element) => {
@@ -441,11 +448,11 @@ function App() {
         }
     }
 
-    const handleGetDBStatus = async () => {
+    const handleDBStatusGet = async () => {
         setDbStatus("unknown")
         try {
             const response = await axios.get(
-                `https://s2muljcg31.execute-api.us-east-1.amazonaws.com/v1/infra/status`, {
+                `${apiInfraUrl}/infra/status`, {
                 headers: {
                     'Content-Type': 'application/json',
                     'x-api-key': `${apiKey}`,
@@ -460,17 +467,17 @@ function App() {
             console.log("Error found during checking DB status")
             console.error(error);
             let message = error.message;
-            if (error.response && error.response.status && error.response.status === 400) {
+            if (error.response && error.response.status && error.response.status === 403) {
                 message += " Check your API key first"
             }
             setMessage(`Error on handleGetLinkByID ${message}`)
         }
     }
 
-    const handleStartDB = async () => {
+    const handleDBStart = async () => {
         try {
             const response = await axios.post(
-                `https://s2muljcg31.execute-api.us-east-1.amazonaws.com/v1/infra/start`, {},
+                `${apiInfraUrl}/infra/start`, {},
                 { headers: {
                     'Content-Type': 'application/json',
                     'x-api-key': `${apiKey}`,
@@ -479,7 +486,7 @@ function App() {
 
             setMessage("")
             console.log(response.data)
-            await handleGetDBStatus()
+            await handleDBStatusGet()
 
         } catch (error) {
             console.log("Error found during starting DB")
@@ -492,10 +499,10 @@ function App() {
         }
     }
 
-    const handleStopDB = async () => {
+    const handleDBStop = async () => {
         try {
             const response = await axios.post(
-                `https://s2muljcg31.execute-api.us-east-1.amazonaws.com/v1/infra/stop`, {},
+                `${apiInfraUrl}/infra/stop`, {},
                 { headers: {
                         'Content-Type': 'application/json',
                         'x-api-key': `${apiKey}`,
@@ -504,7 +511,7 @@ function App() {
 
             setMessage("")
             console.log(response.data)
-            await handleGetDBStatus()
+            await handleDBStatusGet()
 
         } catch (error) {
             console.log("Error found during stopping DB")
@@ -544,7 +551,28 @@ function App() {
         }
     };
 
+    const fileInput = useRef(null);
 
+    const submitFile = async () => {
+        if(fileInput.current.files[0]) {
+            const file = fileInput.current.files[0];
+            const formData = new FormData();
+            formData.append("file", file);
+
+            try {
+                await axios.post('https://y448yz22yk.execute-api.us-east-1.amazonaws.com/v1/upload-file-simple', formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                });
+                alert('File uploaded successfully.');
+            } catch (error) {
+                console.log("Error while uploading file: ", error);
+            }
+        } else {
+            alert('Please select a file.');
+        }
+    };
 
     return (
         <div className="App">
@@ -561,11 +589,14 @@ function App() {
                     <input type="text" value={apiUrl} onChange={e => setApiUrl(e.target.value)}
                            style={{width: '20ch'}}/> Status Bazy danych: {dbStatus}
                 </label>
-                {dbStatus == "stopped" &&
-                    <button onClick={() => handleStartDB()}>Start</button>
+                {dbStatus === "stopped" &&
+                    <button onClick={() => handleDBStart()}>Start</button>
                 }
-                {dbStatus == "available" &&
-                    <button onClick={() => handleStopDB()}>Stop</button>
+                {dbStatus === "available" &&
+                    <button onClick={() => handleDBStop()}>Stop</button>
+                }
+                {(dbStatus === "unknown" || !["stopped", "available"].includes(dbStatus)) &&
+                    <button onClick={() => handleDBStatusGet()}>Status</button>
                 }
             </div>
             <div>
@@ -760,6 +791,10 @@ function App() {
                     />
                 ))}
             </ul>
+            <div>
+                <input type="file" accept=".jpg" ref={fileInput}/>
+                <button onClick={submitFile}>Upload</button>
+            </div>
         </div>
 
     );
