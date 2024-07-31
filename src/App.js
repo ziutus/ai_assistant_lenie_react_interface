@@ -35,8 +35,8 @@ let showElements = {
 function App() {
 
     // const [apiUrl, setApiUrl] = useState("http://localhost:5000/");
-    const [apiUrl, setApiUrl] = useState("https://y448yz22yk.execute-api.us-east-1.amazonaws.com/v1");
-    const [apiInfraUrl, setApiInfraUrl] = useState("https://y448yz22yk.execute-api.us-east-1.amazonaws.com/v1");
+    const [apiUrl, setApiUrl] = useState("https://1bkc3kz7c9.execute-api.us-east-1.amazonaws.com/v1");
+    const [apiInfraUrl, setApiInfraUrl] = useState("https://1bkc3kz7c9.execute-api.us-east-1.amazonaws.com/v1");
     const [apiKey, setApiKey] = useState('');
     const [apiStatusKey, setApiStatusKey] = useState('');
     const [linkId, setLinkId] = useState('');
