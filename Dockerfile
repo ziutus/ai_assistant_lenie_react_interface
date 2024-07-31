@@ -5,7 +5,7 @@ LABEL authors="ziutus"
 WORKDIR /app
 
 # Kopiujemy package.json oraz yarn.lock do katalogu roboczego kontenera
-COPY package*.json yarn.lock ./
+COPY package*.json  ./
 
 # Instalujemy zależności
 RUN yarn install
